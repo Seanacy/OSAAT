@@ -214,7 +214,7 @@ export default function DashboardPage() {
             Your donation helps fund cashout rewards and keeps this program running for the community.
           </p>
           <a
-            href="https://buy.stripe.com/14A4gydl08Et27I3mj9Ve00"
+            href="https://buy.stripe.com/6oU8wI0Y1cbS9defed73G00"
             target="_blank"
             rel="noopener noreferrer"
             className="block text-center py-2 px-4 rounded-lg font-semibold bg-rose-500 text-white hover:bg-rose-600 transition"

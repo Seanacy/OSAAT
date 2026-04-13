@@ -171,7 +171,7 @@ export default function WelcomePage() {
           Every dollar you donate goes directly into the reward pot. That means real cash in the hands of people making real progress.
         </p>
         <a
-          href="https://buy.stripe.com/14A4gydl08Et27I3mj9Ve00"
+          href="https://buy.stripe.com/6oU8wI0Y1cbS9defed73G00"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-block bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-bold py-3 px-8 rounded-xl transition-all transform hover:scale-105 shadow-lg"
