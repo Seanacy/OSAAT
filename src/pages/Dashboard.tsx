@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import PotDisplay from '../components/PotDisplay'
-import { TrendingUp, Share2, ArrowRight, LogOut } from 'lucide-react'
+import { TrendingUp, Share2, ArrowRight, LogOut, Heart } from 'lucide-react'
 
 interface Action {
   id: string
@@ -202,6 +202,26 @@ export default function DashboardPage() {
           >
             Request Cashout
           </Link>
+        </div>
+
+        {/* Donation Section */}
+        <div className="bg-gradient-to-br from-pink-50 to-rose-50 rounded-lg p-4 border border-rose-200">
+          <div className="flex items-center gap-2 mb-2">
+            <Heart className="text-rose-500" size={20} />
+            <h3 className="font-bold text-gray-900">Support OSAAT</h3>
+          </div>
+          <p className="text-sm text-gray-700 mb-4">
+            Your donation helps fund cashout rewards and keeps this program running for the community.
+          </p>
+          <a
+            href="https://buy.stripe.com/14A4gydl08Et27I3mj9Ve00"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block text-center py-2 px-4 rounded-lg font-semibold bg-rose-500 text-white hover:bg-rose-600 transition"
+          >
+            <Heart className="inline mr-2" size={16} />
+            Make a Donation
+          </a>
         </div>
       </div>
     </div>

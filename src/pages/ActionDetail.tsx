@@ -2,7 +2,10 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
-import { ChevronLeft, AlertCircle, Upload, Zap } from 'lucide-react'
+import { ChevronLeft, AlertCircle, Upload, Zap, ShieldCheck } from 'lucide-react'
+import { loadStripe } from '@stripe/stripe-js'
+
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '')
 
 interface Action {
   id: string
@@ -51,8 +54,59 @@ export default function ActionDetailPage() {
     }
   }
 
+  const handleStripeIdentity = async () => {
+    if (!session?.user.id || !action) return
+    setSubmitting(true)
+    setError('')
+
+    try {
+      // Call our Supabase Edge Function to create a verification session
+      const { data, error: fnError } = await supabase.functions.invoke('create-verification-session', {
+        body: { actionId: action.id },
+      })
+
+      if (fnError) throw fnError
+
+      const stripe = await stripePromise
+      if (!stripe) throw new Error('Stripe failed to load')
+
+      // Open the Stripe Identity verification modal
+      const { error: verifyError } = await stripe.verifyIdentity(data.clientSecret)
+
+      if (verifyError) {
+        setError(verifyError.message || 'Verification was cancelled')
+        return
+      }
+
+      // Verification submitted — create a pending user action
+      const { error: insertError } = await supabase.from('user_actions').insert([
+        {
+          userId: session.user.id,
+          actionId: action.id,
+          status: 'pending',
+          notes: `stripe_session:${data.sessionId}`,
+        },
+      ])
+
+      if (insertError) throw insertError
+
+      setCompleted(true)
+      setTimeout(() => navigate('/actions'), 2000)
+    } catch (err: any) {
+      setError(err.message || 'Verification failed')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   const handleSubmit = async () => {
     if (!session?.user.id || !action) return
+
+    // Route to Stripe Identity for ID verification actions
+    if (action.verificationType === 'stripe_identity' || action.verificationType === 'stripe_identity_ssn_covered') {
+      return handleStripeIdentity()
+    }
+
     setSubmitting(true)
     setError('')
 
@@ -247,12 +301,22 @@ export default function ActionDetailPage() {
               </div>
             )}
 
-            {action.verificationType === 'stripe_identity_ssn_covered' && (
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
-                <p className="text-amber-900 font-semibold mb-2">Important!</p>
-                <p className="text-amber-800 text-sm">
-                  You MUST cover your SSN before taking the photo. Use your hand or a piece of paper to obscure it.
-                </p>
+            {(action.verificationType === 'stripe_identity' || action.verificationType === 'stripe_identity_ssn_covered') && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <div className="flex items-start gap-3">
+                  <ShieldCheck className="text-blue-600 flex-shrink-0 mt-0.5" size={24} />
+                  <div>
+                    <p className="text-blue-900 font-semibold mb-1">ID Verification Required</p>
+                    <p className="text-blue-800 text-sm">
+                      This action requires government ID verification. You'll be asked to take a photo of your ID and a selfie. This is handled securely by Stripe.
+                    </p>
+                    {action.verificationType === 'stripe_identity_ssn_covered' && (
+                      <p className="text-amber-700 text-sm font-semibold mt-2">
+                        ⚠️ You MUST cover your SSN before taking the photo. Use your hand or a piece of paper to obscure it.
+                      </p>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
 
@@ -261,7 +325,13 @@ export default function ActionDetailPage() {
               disabled={submitting}
               className="w-full bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 disabled:opacity-50 text-white font-bold py-4 px-4 rounded-lg transition-all text-lg"
             >
-              {submitting ? 'Submitting...' : `Complete & Earn ${action.pointValue} Points`}
+              {submitting
+                ? (action.verificationType === 'stripe_identity' || action.verificationType === 'stripe_identity_ssn_covered')
+                  ? 'Starting Verification...'
+                  : 'Submitting...'
+                : (action.verificationType === 'stripe_identity' || action.verificationType === 'stripe_identity_ssn_covered')
+                  ? 'Verify My Identity'
+                  : `Complete & Earn ${action.pointValue} Points`}
             </button>
           </>
         ) : (
