@@ -204,7 +204,7 @@ export default function WelcomePage() {
         <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">In partnership with</p>
         <div className="flex items-center justify-center gap-6">
           <a
-            href="https://tentcity.tech"
+            href="https://tentcity.app/"
             target="_blank"
             rel="noopener noreferrer"
             className="group flex items-center gap-2 bg-white rounded-xl px-4 py-3 shadow-sm border border-gray-100 hover:border-primary-300 hover:shadow-md transition-all"
