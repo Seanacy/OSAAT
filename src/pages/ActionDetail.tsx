@@ -111,6 +111,19 @@ export default function ActionDetailPage() {
     setError('')
 
     try {
+      // Upload proof file to Supabase Storage if provided
+      let proofUrl: string | null = null
+      if (proofFile) {
+        const fileExt = proofFile.name.split('.').pop()
+        const filePath = `${session.user.id}/${action.id}-${Date.now()}.${fileExt}`
+        const { error: uploadError } = await supabase.storage
+          .from('proof-uploads')
+          .upload(filePath, proofFile)
+
+        if (uploadError) throw new Error('Failed to upload proof: ' + uploadError.message)
+        proofUrl = filePath
+      }
+
       // Create user action record
       const { error: insertError } = await supabase.from('user_actions').insert([
         {
@@ -118,7 +131,7 @@ export default function ActionDetailPage() {
           actionId: action.id,
           status: action.verificationType === 'tap_to_complete' ? 'completed' : 'pending',
           completedAt: action.verificationType === 'tap_to_complete' ? new Date().toISOString() : null,
-          proofUrl: proofFile ? `uploaded-${Date.now()}` : null,
+          proofUrl,
           notes: emailContent || null,
         },
       ])
