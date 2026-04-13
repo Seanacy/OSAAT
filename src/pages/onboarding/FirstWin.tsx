@@ -63,7 +63,7 @@ export default function FirstWinPage() {
     <div className="space-y-6">
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-gray-900 mb-2">Your First Win</h2>
-        <p className="text-gray-600">Step 3 of 4</p>
+        <p className="text-gray-600">Step 3 of 3</p>
       </div>
 
       <div className="bg-gradient-to-br from-primary-50 to-accent-50 rounded-lg p-6">
@@ -118,7 +118,7 @@ export default function FirstWinPage() {
         <Link to="/onboarding/cashout-code" className="text-accent-600 hover:text-accent-700 font-semibold">
           Back
         </Link>
-        <p className="text-sm text-gray-500">3 of 4</p>
+        <p className="text-sm text-gray-500">3 of 3</p>
       </div>
     </div>
   )

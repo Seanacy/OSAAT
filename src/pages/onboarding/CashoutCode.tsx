@@ -47,7 +47,7 @@ export default function CashoutCodePage() {
     <div className="space-y-6">
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-gray-900 mb-2">Create Your Code</h2>
-        <p className="text-gray-600">Step 2 of 4</p>
+        <p className="text-gray-600">Step 2 of 3</p>
       </div>
 
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
@@ -99,7 +99,7 @@ export default function CashoutCodePage() {
         <Link to="/onboarding/create-account" className="text-accent-600 hover:text-accent-700 font-semibold">
           Back
         </Link>
-        <p className="text-sm text-gray-500">2 of 4</p>
+        <p className="text-sm text-gray-500">2 of 3</p>
       </div>
     </div>
   )

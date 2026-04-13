@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
 import { Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
-import { Users, CheckCircle2, DollarSign, Zap, Users2, LogOut } from 'lucide-react'
+import { Users, CheckCircle2, DollarSign, Zap, Users2, LogOut, BarChart3 } from 'lucide-react'
 import AdminUsers from './AdminUsers'
 import AdminVerifications from './AdminVerifications'
 import AdminCashout from './AdminCashout'
 import AdminActions from './AdminActions'
 import AdminPartners from './AdminPartners'
+import AdminAnalytics from './AdminAnalytics'
 
 export default function AdminDashboard() {
   const location = useLocation()
@@ -119,6 +120,15 @@ export default function AdminDashboard() {
             <Users2 size={18} />
             Partners
           </Link>
+          <Link
+            to="/admin/analytics"
+            className={`flex items-center gap-2 px-4 py-2 rounded transition ${
+              isActive('/analytics') ? 'bg-gray-700' : 'hover:bg-gray-800'
+            }`}
+          >
+            <BarChart3 size={18} />
+            Analytics
+          </Link>
         </nav>
 
         <button
@@ -184,6 +194,7 @@ export default function AdminDashboard() {
           <Route path="/cashout" element={<AdminCashout />} />
           <Route path="/actions" element={<AdminActions />} />
           <Route path="/partners" element={<AdminPartners />} />
+          <Route path="/analytics" element={<AdminAnalytics />} />
         </Routes>
       </div>
     </div>

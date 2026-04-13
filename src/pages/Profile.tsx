@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
-import { LogOut, Copy, Check } from 'lucide-react'
+import { LogOut, Copy, Check, Bell } from 'lucide-react'
 
 interface VerificationStatus {
   pending: number
@@ -151,6 +151,21 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
+
+        {/* Notification Preferences */}
+        <Link
+          to="/notifications"
+          className="flex items-center gap-3 bg-white rounded-lg p-5 shadow-sm mb-4 hover:bg-gray-50 transition"
+        >
+          <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
+            <Bell size={20} className="text-primary-600" />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-bold text-gray-900">Notification Preferences</h3>
+            <p className="text-xs text-gray-500">Milestones, tier ups, cashout alerts</p>
+          </div>
+          <span className="text-gray-400">›</span>
+        </Link>
 
         {/* Support Links */}
         <div className="bg-white rounded-lg p-6 shadow-sm mb-4">

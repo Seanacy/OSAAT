@@ -17,6 +17,7 @@ import ActionDetailPage from './pages/ActionDetail'
 import CashoutPage from './pages/Cashout'
 import ProfilePage from './pages/Profile'
 import PointSharingPage from './pages/PointSharing'
+import NotificationPreferencesPage from './pages/NotificationPreferences'
 
 // Admin Pages
 import AdminLogin from './pages/admin/AdminLogin'
@@ -75,6 +76,7 @@ function AppRoutes() {
             <Route path="/cashout" element={<CashoutPage />} />
             <Route path="/point-sharing" element={<PointSharingPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/notifications" element={<NotificationPreferencesPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </>

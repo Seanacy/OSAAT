@@ -9,8 +9,6 @@ export default function CreateAccountPage() {
   const [firstName, setFirstName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [contactMethod, setContactMethod] = useState<'email' | 'phone'>('email')
-  const [phone, setPhone] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -20,13 +18,12 @@ export default function CreateAccountPage() {
     setLoading(true)
 
     try {
-      const contact = contactMethod === 'email' ? email : phone
-      if (!firstName || !contact || !password) {
+      if (!firstName || !email || !password) {
         setError('Please fill in all fields')
         return
       }
 
-      await signUp(contact, password, firstName)
+      await signUp(email, password, firstName)
       navigate('/onboarding/cashout-code')
     } catch (err: any) {
       setError(err.message || 'Failed to create account')
@@ -39,7 +36,7 @@ export default function CreateAccountPage() {
     <div className="space-y-6">
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h2>
-        <p className="text-gray-600">Step 1 of 4</p>
+        <p className="text-gray-600">Step 1 of 3</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -65,59 +62,16 @@ export default function CreateAccountPage() {
 
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Contact Method
+            Email Address
           </label>
-          <div className="flex gap-4">
-            <label className="flex items-center gap-2 flex-1 cursor-pointer">
-              <input
-                type="radio"
-                value="email"
-                checked={contactMethod === 'email'}
-                onChange={(e) => setContactMethod(e.target.value as 'email' | 'phone')}
-                className="w-4 h-4"
-              />
-              <span className="text-gray-700">Email</span>
-            </label>
-            <label className="flex items-center gap-2 flex-1 cursor-pointer">
-              <input
-                type="radio"
-                value="phone"
-                checked={contactMethod === 'phone'}
-                onChange={(e) => setContactMethod(e.target.value as 'email' | 'phone')}
-                className="w-4 h-4"
-              />
-              <span className="text-gray-700">Phone</span>
-            </label>
-          </div>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="your@email.com"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition text-lg"
+          />
         </div>
-
-        {contactMethod === 'email' ? (
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Email Address
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="your@email.com"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition text-lg"
-            />
-          </div>
-        ) : (
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Phone Number
-            </label>
-            <input
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="(555) 123-4567"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition text-lg"
-            />
-          </div>
-        )}
 
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -146,7 +100,7 @@ export default function CreateAccountPage() {
         <Link to="/welcome" className="text-accent-600 hover:text-accent-700 font-semibold">
           Back
         </Link>
-        <p className="text-sm text-gray-500">1 of 4</p>
+        <p className="text-sm text-gray-500">1 of 3</p>
       </div>
     </div>
   )

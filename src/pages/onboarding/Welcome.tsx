@@ -156,7 +156,7 @@ export default function WelcomePage() {
           </div>
         </div>
         <Link
-          to="/partner-login"
+          to="/partner/login"
           className="inline-flex items-center gap-1 text-accent-600 hover:text-accent-700 font-semibold text-sm mt-4"
         >
           Partner Login <ChevronRight size={16} />
@@ -200,7 +200,28 @@ export default function WelcomePage() {
       </div>
 
       {/* Footer */}
-      <div className="pt-4 pb-2 border-t border-gray-200">
+      <div className="pt-6 pb-2 border-t border-gray-200 space-y-4">
+        <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">In partnership with</p>
+        <div className="flex items-center justify-center gap-6">
+          <a
+            href="https://tentcity.tech"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex items-center gap-2 bg-white rounded-xl px-4 py-3 shadow-sm border border-gray-100 hover:border-primary-300 hover:shadow-md transition-all"
+          >
+            <span className="text-2xl">🏕️</span>
+            <span className="font-bold text-gray-800 group-hover:text-primary-600 transition-colors text-sm">TentCity</span>
+          </a>
+          <a
+            href="https://bridgework.tech"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex items-center gap-2 bg-white rounded-xl px-4 py-3 shadow-sm border border-gray-100 hover:border-accent-300 hover:shadow-md transition-all"
+          >
+            <span className="text-2xl">🌉</span>
+            <span className="font-bold text-gray-800 group-hover:text-accent-600 transition-colors text-sm">BridgeWork</span>
+          </a>
+        </div>
         <p className="text-xs text-gray-400">
           Built with purpose. Powered by community.
         </p>
