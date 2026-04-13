@@ -1,12 +1,6 @@
 import { Link } from 'react-router-dom'
-import { Heart, Star, TrendingUp, Users, DollarSign, ChevronRight, Shield, Sparkles } from 'lucide-react'
+import { Heart, Star, ChevronRight, Shield, Sparkles } from 'lucide-react'
 import { useState, useEffect } from 'react'
-
-const IMPACT_STATS = [
-  { icon: Users, label: 'Lives Touched', value: 0, suffix: '+', color: 'text-accent-500' },
-  { icon: TrendingUp, label: 'Actions Completed', value: 0, suffix: '+', color: 'text-primary-500' },
-  { icon: DollarSign, label: 'Cash Rewarded', value: 0, prefix: '$', suffix: '', color: 'text-warm-500' },
-]
 
 const CATEGORIES = [
   { name: 'Health & Hygiene', emoji: '🩺', desc: 'Doctor visits, dental care, hygiene routines' },
