@@ -45,6 +45,22 @@ export default function WelcomePage() {
         </div>
       </div>
 
+      {/* Top Get Started CTA */}
+      <div className="space-y-3">
+        <Link
+          to="/onboarding/create-account"
+          className="block w-full bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-bold py-4 px-6 rounded-xl transition-all transform hover:scale-105 shadow-lg text-lg"
+        >
+          Get Started — It's Free
+        </Link>
+        <p className="text-gray-600 text-sm">
+          Already have an account?{' '}
+          <Link to="/login" className="text-accent-600 hover:text-accent-700 font-semibold">
+            Sign In
+          </Link>
+        </p>
+      </div>
+
       {/* Mission Card */}
       <div className="bg-white rounded-2xl p-6 shadow-md border border-gray-100 text-left">
         <div className="flex items-center gap-2 mb-3">
