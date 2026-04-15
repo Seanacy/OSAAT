@@ -34,6 +34,7 @@ export type Action = {
   verificationType: 'tap_to_complete' | 'proof_upload' | 'document_upload' | 'email_forward' | 'partner_portal' | 'stripe_identity' | 'stripe_identity_ssn_covered' | 'mutual_app_confirmation'
   isEnabled: boolean
   createdAt: string
+  priority: number
 }
 
 export type UserAction = {

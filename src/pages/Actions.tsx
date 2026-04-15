@@ -14,6 +14,7 @@ interface Action {
   isRepeatable: boolean
   verificationType: string
   isEnabled: boolean
+  priority: number
 }
 
 const CATEGORIES = [
@@ -42,7 +43,7 @@ export default function ActionsPage() {
         .from('actions')
         .select('*')
         .eq('isEnabled', true)
-        .order('pointValue', { ascending: false })
+        .order('priority', { ascending: true })
 
       if (error) throw error
       setActions(data || [])

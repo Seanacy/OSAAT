@@ -19,6 +19,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [tier, setTier] = useState(1)
   const [progressToNextTier, setProgressToNextTier] = useState(0)
+  const [potAvailable, setPotAvailable] = useState(0)
 
   useEffect(() => {
     loadData()
@@ -29,16 +30,30 @@ export default function DashboardPage() {
     setLoading(true)
 
     try {
-      // Load next recommended action
+      const currentTier = user.tier || 1
+
+      // Load all user's completed action IDs (to skip in recommendation)
+      const { data: allCompleted } = await supabase
+        .from('user_actions')
+        .select('actionId')
+        .eq('userId', user.id)
+        .eq('status', 'completed')
+
+      const completedIds = new Set((allCompleted || []).map((a: any) => a.actionId))
+
+      // Load next recommended action: highest priority (lowest number) the user has unlocked, not completed
       const { data: actions } = await supabase
         .from('actions')
         .select('*')
         .eq('isEnabled', true)
-        .gte('minTierRequired', user.tier || 1)
-        .limit(1)
+        .lte('minTierRequired', currentTier)
+        .order('priority', { ascending: true })
 
-      if (actions && actions.length > 0) {
-        setNextAction(actions[0])
+      const nextUp = (actions || []).find((a: any) => !completedIds.has(a.id))
+      if (nextUp) {
+        setNextAction(nextUp)
+      } else {
+        setNextAction(null)
       }
 
       // Load recent completions
@@ -51,6 +66,17 @@ export default function DashboardPage() {
         .limit(5)
 
       setRecentCompletions(completed || [])
+
+      // Load pot available cashout balance
+      const { data: potData } = await supabase
+        .from('westaackr_pot')
+        .select('current_cashout_balance')
+        .limit(1)
+        .single()
+
+      if (potData) {
+        setPotAvailable(Number(potData.current_cashout_balance) || 0)
+      }
 
       // Calculate tier and progress
       const points = user.points || 0
@@ -192,16 +218,26 @@ export default function DashboardPage() {
           <p className="text-sm text-gray-700 mb-4">
             You need at least 500 points. You have {user?.points || 0} points.
           </p>
-          <Link
-            to="/cashout"
-            className={`block text-center py-2 px-4 rounded-lg font-semibold transition ${
-              (user?.points || 0) >= 500
-                ? 'bg-primary-600 text-white hover:bg-primary-700'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            }`}
-          >
-            Request Cashout
-          </Link>
+          {potAvailable < 3 && (
+            <p className="text-xs text-rose-600 mb-3 font-medium">
+              Cashouts paused — pot is below $3 minimum. Current: ${potAvailable.toFixed(2)}
+            </p>
+          )}
+          {(user?.points || 0) >= 500 && potAvailable >= 3 ? (
+            <Link
+              to="/cashout"
+              className="block text-center py-2 px-4 rounded-lg font-semibold transition bg-primary-600 text-white hover:bg-primary-700"
+            >
+              Request Cashout
+            </Link>
+          ) : (
+            <div
+              aria-disabled="true"
+              className="block text-center py-2 px-4 rounded-lg font-semibold bg-gray-300 text-gray-500 cursor-not-allowed select-none"
+            >
+              Request Cashout
+            </div>
+          )}
         </div>
 
         {/* Donation Section */}

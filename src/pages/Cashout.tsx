@@ -24,10 +24,25 @@ export default function CashoutPage() {
   const [requests, setRequests] = useState<CashoutRequest[]>([])
   const [showForm, setShowForm] = useState(true)
   const [copiedCode, setCopiedCode] = useState<string | null>(null)
+  const [potAvailable, setPotAvailable] = useState<number | null>(null)
 
   useEffect(() => {
     loadRequests()
+    loadPot()
   }, [session?.user.id])
+
+  const loadPot = async () => {
+    try {
+      const { data } = await supabase
+        .from('westaackr_pot')
+        .select('current_cashout_balance')
+        .limit(1)
+        .single()
+      if (data) setPotAvailable(Number(data.current_cashout_balance) || 0)
+    } catch (error) {
+      console.error('Error loading pot:', error)
+    }
+  }
 
   const loadRequests = async () => {
     if (!session?.user.id) return
@@ -62,6 +77,12 @@ export default function CashoutPage() {
 
       if ((user?.points || 0) < points) {
         setError(`You only have ${user?.points} points`)
+        setLoading(false)
+        return
+      }
+
+      if (potAvailable !== null && potAvailable < 3) {
+        setError(`Cashouts are paused. The community pot is below the $3 minimum (currently $${potAvailable.toFixed(2)}).`)
         setLoading(false)
         return
       }
@@ -218,10 +239,19 @@ export default function CashoutPage() {
                 />
               </div>
 
+              {potAvailable !== null && potAvailable < 3 && (
+                <div className="flex gap-3 bg-rose-50 border border-rose-200 rounded-lg p-3">
+                  <AlertCircle size={18} className="text-rose-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-rose-700 text-sm">
+                    Cashouts are paused — community pot is below the $3 minimum (currently ${potAvailable.toFixed(2)}).
+                  </p>
+                </div>
+              )}
+
               <button
                 type="submit"
-                disabled={loading || availablePoints < 500}
-                className="w-full bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 disabled:opacity-50 text-white font-bold py-3 px-4 rounded-lg transition-all text-lg"
+                disabled={loading || availablePoints < 500 || (potAvailable !== null && potAvailable < 3)}
+                className="w-full bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-lg transition-all text-lg"
               >
                 {loading ? 'Processing...' : `Request ${cashAmount.toFixed(2)} Cashout`}
               </button>
