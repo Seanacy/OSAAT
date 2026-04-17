@@ -1,6 +1,17 @@
 import { useState, useEffect } from 'react'
+import { createClient } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import { ExternalLink } from 'lucide-react'
+
+// WeStackr public Supabase client (read-only via anon key)
+const westackrSupabase = createClient(
+  'https://tklwlvjufxumkdeeygeq.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrbHdsdmp1Znh1bWtkZWV5Z2VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2MTQyMDIsImV4cCI6MjA5MTE5MDIwMn0.a4Yi7jqiCzEscI1ysobfrJLtYTcGb-LFfCIXOJzceR8'
+)
+
+// OSAAT campaign ID on WeStackr
+const OSAAT_CAMPAIGN_ID = 'fa2785af-7519-4ed2-bbb1-67f78acf94a7'
+const CAMPAIGN_URL = `https://www.westackr.com/campaign/${OSAAT_CAMPAIGN_ID}`
 
 interface PotData {
   totalRaised: number
@@ -24,19 +35,33 @@ export default function PotDisplay() {
 
   const fetchPot = async () => {
     try {
-      const { data, error } = await supabase
-        .from('westaackr_pot')
-        .select('*')
-        .limit(1)
+      // Read live campaign amount directly from WeStackr's database
+      const { data, error } = await westackrSupabase
+        .from('campaigns')
+        .select('current_amount')
+        .eq('id', OSAAT_CAMPAIGN_ID)
         .single()
 
       if (!error && data) {
-        setPot({
-          totalRaised: Number(data.total_raised) || 0,
-          operationsReserve: Number(data.operations_reserve) || 0,
-          bridgeWorkFund: Number(data.bridgework_fund) || 0,
-          availableCashout: Number(data.current_cashout_balance) || 0,
-        })
+        const totalRaised = Number(data.current_amount) || 0
+        const operationsReserve = totalRaised * 0.10
+        const bridgeWorkFund = totalRaised * 0.12
+        const availableCashout = totalRaised * 0.78
+
+        setPot({ totalRaised, operationsReserve, bridgeWorkFund, availableCashout })
+
+        // Sync back to OSAAT's local pot table so Cashout page stays accurate
+        await supabase
+          .from('westaackr_pot')
+          .update({
+            total_raised: totalRaised,
+            operations_reserve: operationsReserve,
+            bridgework_fund: bridgeWorkFund,
+            cashout_pot: availableCashout,
+            current_cashout_balance: availableCashout,
+            last_updated: new Date().toISOString(),
+          })
+          .not('pot_id', 'is', null) // update the single row
       }
     } catch (error) {
       console.error('Error fetching pot:', error)
@@ -86,7 +111,7 @@ export default function PotDisplay() {
       )}
 
       <a
-        href="https://weStackr.com/osaat"
+        href={CAMPAIGN_URL}
         target="_blank"
         rel="noopener noreferrer"
         className="inline-flex items-center gap-2 text-sm font-semibold text-accent-600 hover:text-accent-700 transition-colors"
