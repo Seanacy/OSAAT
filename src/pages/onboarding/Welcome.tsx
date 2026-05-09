@@ -213,7 +213,7 @@ export default function WelcomePage() {
             <span className="font-bold text-gray-800 group-hover:text-primary-600 transition-colors text-sm">TentCity</span>
           </a>
           <a
-            href="https://bridgework.tech"
+            href="https://bridgework.life"
             target="_blank"
             rel="noopener noreferrer"
             className="group flex items-center gap-2 bg-white rounded-xl px-4 py-3 shadow-sm border border-gray-100 hover:border-accent-300 hover:shadow-md transition-all"
