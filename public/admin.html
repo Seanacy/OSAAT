@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>OSAAT Admin Dashboard</title>
+<script src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7.23.6/babel.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0a0a0f;color:#e0e0e0;line-height:1.5}
+#root{min-height:100vh}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useCallback } = React;
+
+const SUPABASE_URL = 'https://ygdfhbvhztxswkgxdjjt.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlnZGZoYnZoenR4c3drZ3hkamp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMjY1NjQsImV4cCI6MjA5MTYwMjU2NH0.iiFabXGk3cZA0wJqkqDG5owKS9EjHlWWVNd4ktSi-sg';
+const ADMIN_EMAIL = '247ggtms@gmail.com';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const CATEGORIES = ['foundation','health_stability','employment_prep','employment_outcome','community_contribution','network_growth'];
+const VERIFICATION_TYPES = ['tap_to_complete','proof_upload','document_upload','email_forward','partner_portal','stripe_identity','stripe_identity_ssn_covered','mutual_app_confirmation','document_upload_comparison','certificate_upload','in_person_confirmation','referee_confirmation','org_confirmation','partner_portal_drug_test','employer_email_or_paystub'];
+
+const fmt = d => d ? new Date(d).toLocaleDateString() : 'â';
+const fmtTime = d => d ? new Date(d).toLocaleString() : 'â';
+const catLabel = c => c ? c.replace(/_/g,' ').replace(/\b\w/g,l=>l.toUpperCase()) : '';
+
+/* âââ Styles âââ */
+const S = {
+  page: { minHeight:'100vh', background:'linear-gradient(135deg,#0a0a0f 0%,#1a1a2e 100%)' },
+  login: { display:'flex',alignItems:'center',justifyContent:'center',minHeight:'100vh',background:'linear-gradient(135deg,#0a0a0f 0%,#1a1a2e 100%)' },
+  loginBox: { background:'#16162a',borderRadius:16,padding:40,width:360,boxShadow:'0 8px 32px rgba(0,0,0,.4)' },
+  input: { width:'100%',padding:'12px 16px',borderRadius:8,border:'1px solid #333',background:'#0d0d1a',color:'#e0e0e0',fontSize:14,marginBottom:12,outline:'none' },
+  btn: { width:'100%',padding:'12px 16px',borderRadius:8,border:'none',background:'#4ade80',color:'#000',fontSize:14,fontWeight:600,cursor:'pointer' },
+  btnSm: { padding:'6px 14px',borderRadius:6,border:'none',fontSize:12,fontWeight:600,cursor:'pointer' },
+  nav: { display:'flex',gap:0,background:'#16162a',borderBottom:'1px solid #222',padding:'0 24px',overflowX:'auto' },
+  navBtn: (a) => ({ padding:'14px 20px',border:'none',background:'transparent',color:a?'#4ade80':'#888',borderBottom:a?'2px solid #4ade80':'2px solid transparent',cursor:'pointer',fontSize:14,fontWeight:a?600:400,whiteSpace:'nowrap' }),
+  card: { background:'#16162a',borderRadius:12,padding:20,border:'1px solid #1e1e3a' },
+  stat: { background:'#16162a',borderRadius:12,padding:20,border:'1px solid #1e1e3a',textAlign:'center',flex:'1 1 180px' },
+  statVal: { fontSize:28,fontWeight:700,color:'#4ade80' },
+  statLabel: { fontSize:12,color:'#888',marginTop:4 },
+  table: { width:'100%',borderCollapse:'collapse',fontSize:13 },
+  th: { textAlign:'left',padding:'10px 12px',borderBottom:'1px solid #333',color:'#888',fontWeight:500,fontSize:11,textTransform:'uppercase',letterSpacing:'.5px' },
+  td: { padding:'10px 12px',borderBottom:'1px solid #1e1e3a',verticalAlign:'top' },
+  badge: (color) => ({ display:'inline-block',padding:'2px 10px',borderRadius:12,fontSize:11,fontWeight:600,background:color+'22',color }),
+  container: { maxWidth:1200,margin:'0 auto',padding:24 },
+  modal: { position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(0,0,0,.7)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000 },
+  modalBox: { background:'#16162a',borderRadius:16,padding:32,width:520,maxHeight:'80vh',overflowY:'auto',border:'1px solid #333' },
+  select: { width:'100%',padding:'12px 16px',borderRadius:8,border:'1px solid #333',background:'#0d0d1a',color:'#e0e0e0',fontSize:14,marginBottom:12 },
+  textarea: { width:'100%',padding:'12px 16px',borderRadius:8,border:'1px solid #333',background:'#0d0d1a',color:'#e0e0e0',fontSize:14,marginBottom:12,minHeight:80,resize:'vertical',fontFamily:'inherit' },
+  header: { background:'#16162a',padding:'16px 24px',borderBottom:'1px solid #222',display:'flex',justifyContent:'space-between',alignItems:'center' },
+};
+
+/* âââ Login âââ */
+function LoginPage({ onLogin }) {
+  const [pw, setPw] = useState('');
+  const [err, setErr] = useState('');
+  const [loading, setLoading] = useState(false);
+  const handle = async () => {
+    setLoading(true); setErr('');
+    const { error } = await sb.auth.signInWithPassword({ email: ADMIN_EMAIL, password: pw });
+    if (error) { setErr('Invalid password'); setLoading(false); return; }
+    onLogin();
+  };
+  return (
+    <div style={S.login}>
+      <div style={S.loginBox}>
+        <h2 style={{textAlign:'center',marginBottom:8,color:'#4ade80'}}>OSAAT Admin</h2>
+        <p style={{textAlign:'center',color:'#888',marginBottom:24,fontSize:13}}>Behavioral Progression Platform</p>
+        <input style={S.input} type="password" placeholder="Admin password" value={pw} onChange={e=>setPw(e.target.value)} onKeyDown={e=>e.key==='Enter'&&handle()} autoFocus/>
+        {err && <p style={{color:'#f87171',fontSize:13,marginBottom:8}}>{err}</p>}
+        <button style={{...S.btn,opacity:loading?.6:1}} onClick={handle} disabled={loading}>{loading?'Signing in...':'Sign In'}</button>
+      </div>
+    </div>
+  );
+}
+
+/* âââ Overview Tab âââ */
+function OverviewTab({ users, actions, userActions, cashouts, pot }) {
+  const pending = userActions.filter(a=>a.status==='pending').length;
+  const pendingCash = cashouts.filter(c=>c.status==='pending').length;
+  const totalPoints = users.reduce((s,u)=>s+u.points,0);
+  return (
+    <div style={S.container}>
+      <h2 style={{marginBottom:20}}>Dashboard Overview</h2>
+      <div style={{display:'flex',flexWrap:'wrap',gap:16,marginBottom:24}}>
+        <div style={S.stat}><div style={S.statVal}>{users.length}</div><div style={S.statLabel}>Total Users</div></div>
+        <div style={S.stat}><div style={S.statVal}>{actions.filter(a=>a.isEnabled).length}</div><div style={S.statLabel}>Active Actions</div></div>
+        <div style={S.stat}><div style={{...S.statVal,color:pending?'#fbbf24':'#4ade80'}}>{pending}</div><div style={S.statLabel}>Pending Verifications</div></div>
+        <div style={S.stat}><div style={{...S.statVal,color:pendingCash?'#f87171':'#4ade80'}}>{pendingCash}</div><div style={S.statLabel}>Pending Cashouts</div></div>
+        <div style={S.stat}><div style={S.statVal}>{totalPoints.toLocaleString()}</div><div style={S.statLabel}>Total Points Earned</div></div>
+      </div>
+      {pot && (
+        <div style={S.card}>
+          <h3 style={{marginBottom:16}}>Community Pot</h3>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))',gap:16}}>
+            <div><div style={{color:'#888',fontSize:12}}>Total Raised</div><div style={{fontSize:20,fontWeight:600,color:'#4ade80'}}>${Number(pot.total_raised||0).toFixed(2)}</div></div>
+            <div><div style={{color:'#888',fontSize:12}}>Cashout Pot</div><div style={{fontSize:20,fontWeight:600}}>${Number(pot.cashout_pot||0).toFixed(2)}</div></div>
+            <div><div style={{color:'#888',fontSize:12}}>Current Cashout Balance</div><div style={{fontSize:20,fontWeight:600}}>${Number(pot.current_cashout_balance||0).toFixed(2)}</div></div>
+            <div><div style={{color:'#888',fontSize:12}}>Operations Reserve</div><div style={{fontSize:20,fontWeight:600}}>${Number(pot.operations_reserve||0).toFixed(2)}</div></div>
+            <div><div style={{color:'#888',fontSize:12}}>BridgeWork Fund</div><div style={{fontSize:20,fontWeight:600}}>${Number(pot.bridgework_fund||0).toFixed(2)}</div></div>
+          </div>
+          <div style={{color:'#555',fontSize:11,marginTop:12}}>Last updated: {fmtTime(pot.last_updated)}</div>
+        </div>
+      )}
+      <div style={{...S.card,marginTop:16}}>
+        <h3 style={{marginBottom:12}}>Recent Users</h3>
+        {users.length===0 ? <p style={{color:'#888'}}>No users yet</p> : (
+          <table style={S.table}>
+            <thead><tr><th style={S.th}>Name</th><th style={S.th}>Email/Phone</th><th style={S.th}>Points</th><th style={S.th}>Tier</th><th style={S.th}>Joined</th></tr></thead>
+            <tbody>
+              {users.slice(0,10).map(u=>(
+                <tr key={u.id}>
+                  <td style={S.td}>{u.firstName}{u.nickname?` (${u.nickname})`:''}</td>
+                  <td style={S.td}>{u.email||u.phone||'â'}</td>
+                  <td style={S.td}>{u.points}</td>
+                  <td style={S.td}><span style={S.badge('#4ade80')}>Tier {u.tier}</span></td>
+                  <td style={S.td}>{fmt(u.createdAt)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* âââ Users Tab âââ */
+function UsersTab({ users, reload }) {
+  const [search, setSearch] = useState('');
+  const filtered = users.filter(u => {
+    const s = search.toLowerCase();
+    return !s || (u.firstName||'').toLowerCase().includes(s) || (u.email||'').toLowerCase().includes(s) || (u.phone||'').includes(s) || (u.nickname||'').toLowerCase().includes(s);
+  });
+  const toggleSuspend = async (u) => {
+    await sb.from('users').update({ isSuspended: !u.isSuspended }).eq('id', u.id);
+    reload();
+  };
+  return (
+    <div style={S.container}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
+        <h2>Users ({users.length})</h2>
+        <input style={{...S.input,width:260,marginBottom:0}} placeholder="Search users..." value={search} onChange={e=>setSearch(e.target.value)}/>
+      </div>
+      <div style={S.card}>
+        <table style={S.table}>
+          <thead><tr><th style={S.th}>Name</th><th style={S.th}>Contact</th><th style={S.th}>Points</th><th style={S.th}>Tier</th><th style={S.th}>Cashout Code</th><th style={S.th}>Status</th><th style={S.th}>Joined</th><th style={S.th}>Actions</th></tr></thead>
+          <tbody>
+            {filtered.map(u=>(
+              <tr key={u.id}>
+                <td style={S.td}><strong>{u.firstName}</strong>{u.nickname?<span style={{color:'#888'}}> ({u.nickname})</span>:''}</td>
+                <td style={S.td}><div>{u.email||'â'}</div><div style={{color:'#888',fontSize:11}}>{u.phone||''}</div></td>
+                <td style={S.td}>{u.points.toLocaleString()}</td>
+                <td style={S.td}><span style={S.badge('#4ade80')}>Tier {u.tier}</span></td>
+                <td style={S.td}><code style={{fontSize:11,color:'#888'}}>{u.cashoutCode||'â'}</code></td>
+                <td style={S.td}>{u.isSuspended?<span style={S.badge('#f87171')}>Suspended</span>:<span style={S.badge('#4ade80')}>Active</span>}</td>
+                <td style={S.td}>{fmt(u.createdAt)}</td>
+                <td style={S.td}>
+                  <button style={{...S.btnSm,background:u.isSuspended?'#4ade80':'#f87171',color:u.isSuspended?'#000':'#fff'}} onClick={()=>toggleSuspend(u)}>
+                    {u.isSuspended?'Unsuspend':'Suspend'}
+                  </button>
+                </td>
+              </tr>
+            ))}
+            {filtered.length===0 && <tr><td colSpan={8} style={{...S.td,textAlign:'center',color:'#888'}}>No users found</td></tr>}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+/* âââ Actions Tab âââ */
+function ActionsTab({ actions, reload }) {
+  const [showModal, setShowModal] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [form, setForm] = useState({});
+
+  const openNew = () => {
+    setEditing(null);
+    setForm({ name:'',category:'foundation',pointValue:10,cashValue:0,isRepeatable:false,verificationType:'tap_to_complete',minTierRequired:0,isEnabled:true,priority:999,sideNote:'',mandatory:false });
+    setShowModal(true);
+  };
+  const openEdit = (a) => {
+    setEditing(a);
+    setForm({ name:a.name,category:a.category,pointValue:a.pointValue,cashValue:a.cashValue,isRepeatable:a.isRepeatable,verificationType:a.verificationType,minTierRequired:a.minTierRequired,isEnabled:a.isEnabled,priority:a.priority||999,sideNote:a.sideNote||'',mandatory:a.mandatory||false });
+    setShowModal(true);
+  };
+  const save = async () => {
+    const data = { ...form, pointValue:Number(form.pointValue), cashValue:Number(form.cashValue), minTierRequired:Number(form.minTierRequired), priority:Number(form.priority) };
+    if (editing) {
+      await sb.from('actions').update(data).eq('id', editing.id);
+    } else {
+      await sb.from('actions').insert(data);
+    }
+    setShowModal(false);
+    reload();
+  };
+  const toggleEnabled = async (a) => {
+    await sb.from('actions').update({ isEnabled: !a.isEnabled }).eq('id', a.id);
+    reload();
+  };
+  const sorted = [...actions].sort((a,b)=>(a.priority||999)-(b.priority||999));
+
+  return (
+    <div style={S.container}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
+        <h2>Actions ({actions.length})</h2>
+        <button style={{...S.btnSm,background:'#4ade80',color:'#000',padding:'8px 20px',fontSize:14}} onClick={openNew}>+ Add Action</button>
+      </div>
+      <div style={S.card}>
+        <table style={S.table}>
+          <thead><tr><th style={S.th}>#</th><th style={S.th}>Name</th><th style={S.th}>Category</th><th style={S.th}>Points</th><th style={S.th}>Cash</th><th style={S.th}>Tier</th><th style={S.th}>Verification</th><th style={S.th}>Status</th><th style={S.th}>Actions</th></tr></thead>
+          <tbody>
+            {sorted.map((a,i)=>(
+              <tr key={a.id} style={{opacity:a.isEnabled?1:.5}}>
+                <td style={S.td}>{a.priority||999}</td>
+                <td style={S.td}><strong>{a.name}</strong>{a.mandatory&&<span style={{...S.badge('#fbbf24'),marginLeft:6}}>Required</span>}{a.sideNote&&<div style={{color:'#888',fontSize:11}}>{a.sideNote}</div>}</td>
+                <td style={S.td}><span style={S.badge('#60a5fa')}>{catLabel(a.category)}</span></td>
+                <td style={S.td}>{a.pointValue}</td>
+                <td style={S.td}>${Number(a.cashValue).toFixed(2)}</td>
+                <td style={S.td}>{a.minTierRequired}</td>
+                <td style={S.td}><span style={{fontSize:11,color:'#888'}}>{a.verificationType?.replace(/_/g,' ')}</span></td>
+                <td style={S.td}>{a.isEnabled?<span style={S.badge('#4ade80')}>Active</span>:<span style={S.badge('#f87171')}>Disabled</span>}</td>
+                <td style={S.td}>
+                  <div style={{display:'flex',gap:6}}>
+                    <button style={{...S.btnSm,background:'#333',color:'#e0e0e0'}} onClick={()=>openEdit(a)}>Edit</button>
+                    <button style={{...S.btnSm,background:a.isEnabled?'#7f1d1d':'#14532d',color:a.isEnabled?'#fca5a5':'#86efac'}} onClick={()=>toggleEnabled(a)}>
+                      {a.isEnabled?'Disable':'Enable'}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {showModal && (
+        <div style={S.modal} onClick={()=>setShowModal(false)}>
+          <div style={S.modalBox} onClick={e=>e.stopPropagation()}>
+            <h3 style={{marginBottom:20}}>{editing?'Edit Action':'New Action'}</h3>
+            <label style={{fontSize:12,color:'#888',marginBottom:4,display:'block'}}>Name</label>
+            <input style={S.input} value={form.name} onChange={e=>setForm({...form,name:e.target.value})} placeholder="Action name"/>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+              <div>
+                <label style={{fontSize:12,color:'#888',marginBottom:4,display:'block'}}>Category</label>
+                <select style={S.select} value={form.category} onChange={e=>setForm({...form,category:e.target.value})}>
+                  {CATEGORIES.map(c=><option key={c} value={c}>{catLabel(c)}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={{fontSize:12,color:'#888',marginBottom:4,display:'block'}}>Verification Type</label>
+                <select style={S.select} value={form.verificationType} onChange={e=>setForm({...form,verificationType:e.target.value})}>
+                  {VERIFICATION_TYPES.map(v=><option key={v} value={v}>{v.replace(/_/g,' ')}</option>)}
+                </select>
+              </div>
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:12}}>
+              <div>
+                <label style={{fontSize:12,color:'#888',marginBottom:4,display:'block'}}>Points</label>
+                <input style={S.input} type="number" value={form.pointValue} onChange={e=>setForm({...form,pointValue:e.target.value})}/>
+              </div>
+              <div>
+                <label style={{fontSize:12,color:'#888',marginBottom:4,display:'block'}}>Cash Value ($)</label>
+                <input style={S.input} type="number" step="0.01" value={form.cashValue} onChange={e=>setForm({...form,cashValue:e.target.value})}/>
+              </div>
+              <div>
+                <label style={{fontSize:12,color:'#888',marginBottom:4,display:'block'}}>Min Tier</label>
+                <select style={S.select} value={form.minTierRequired} onChange={e=>setForm({...form,minTierRequired:e.target.value})}>
+                  <option value={0}>0</option><option value={1}>1</option><option value={2}>2</option><option value={3}>3</option>
+                </select>
+              </div>
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+              <div>
+                <label style={{fontSize:12,color:'#888',marginBottom:4,display:'block'}}>Priority</label>
+                <input style={S.input} type="number" value={form.priority} onChange={e=>setForm({...form,priority:e.target.value})}/>
+              </div>
+              <div style={{display:'flex',flexDirection:'column',justifyContent:'center',gap:8,paddingTop:16}}>
+                <label style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer',fontSize:13}}>
+                  <input type="checkbox" checked={form.isRepeatable} onChange={e=>setForm({...form,isRepeatable:e.target.checked})}/> Repeatable
+                </label>
+                <label style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer',fontSize:13}}>
+                  <input type="checkbox" checked={form.mandatory} onChange={e=>setForm({...form,mandatory:e.target.checked})}/> Mandatory
+                </label>
+                <label style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer',fontSize:13}}>
+                  <input type="checkbox" checked={form.isEnabled} onChange={e=>setForm({...form,isEnabled:e.target.checked})}/> Enabled
+                </label>
+              </div>
+            </div>
+            <label style={{fontSize:12,color:'#888',marginBottom:4,display:'block'}}>Side Note</label>
+            <textarea style={S.textarea} value={form.sideNote} onChange={e=>setForm({...form,sideNote:e.target.value})} placeholder="Optional note shown to users"/>
+            <div style={{display:'flex',gap:12,marginTop:8}}>
+              <button style={{...S.btn,background:'#4ade80',color:'#000'}} onClick={save}>Save</button>
+              <button style={{...S.btn,background:'#333',color:'#e0e0e0'}} onClick={()=>setShowModal(false)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* âââ Verifications Tab âââ */
+function VerificationsTab({ userActions, users, actions, reload }) {
+  const pending = userActions.filter(a=>a.status==='pending'||a.status==='completed');
+  const verified = userActions.filter(a=>a.status==='verified');
+  const getUserName = id => { const u = users.find(u=>u.id===id); return u ? u.firstName : 'Unknown'; };
+  const getActionName = id => { const a = actions.find(a=>a.id===id); return a ? a.name : id; };
+
+  const verify = async (ua) => {
+    await sb.from('user_actions').update({ status:'verified', verifiedAt: new Date().toISOString() }).eq('id', ua.id);
+    reload();
+  };
+  const reject = async (ua) => {
+    await sb.from('user_actions').update({ status:'rejected', notes:'Rejected by admin' }).eq('id', ua.id);
+    reload();
+  };
+
+  return (
+    <div style={S.container}>
+      <h2 style={{marginBottom:20}}>Verifications ({pending.length} pending)</h2>
+      {pending.length===0 ? (
+        <div style={{...S.card,textAlign:'center',padding:40,color:'#888'}}>No pending verifications</div>
+      ) : (
+        <div style={S.card}>
+          <table style={S.table}>
+            <thead><tr><th style={S.th}>User</th><th style={S.th}>Action</th><th style={S.th}>Status</th><th style={S.th}>Proof</th><th style={S.th}>Submitted</th><th style={S.th}>Actions</th></tr></thead>
+            <tbody>
+              {pending.map(ua=>(
+                <tr key={ua.id}>
+                  <td style={S.td}>{getUserName(ua.userId)}</td>
+                  <td style={S.td}>{getActionName(ua.actionId)}</td>
+                  <td style={S.td}><span style={S.badge(ua.status==='pending'?'#fbbf24':'#60a5fa')}>{ua.status}</span></td>
+                  <td style={S.td}>{ua.proofUrl ? <a href={ua.proofUrl} target="_blank" style={{color:'#60a5fa',fontSize:12}}>View Proof</a> : 'â'}</td>
+                  <td style={S.td}>{fmtTime(ua.completedAt||ua.createdAt)}</td>
+                  <td style={S.td}>
+                    <div style={{display:'flex',gap:6}}>
+                      <button style={{...S.btnSm,background:'#4ade80',color:'#000'}} onClick={()=>verify(ua)}>Verify</button>
+                      <button style={{...S.btnSm,background:'#f87171',color:'#fff'}} onClick={()=>reject(ua)}>Reject</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {verified.length>0 && (
+        <>
+          <h3 style={{margin:'24px 0 12px'}}>Recently Verified ({verified.length})</h3>
+          <div style={S.card}>
+            <table style={S.table}>
+              <thead><tr><th style={S.th}>User</th><th style={S.th}>Action</th><th style={S.th}>Verified</th></tr></thead>
+              <tbody>
+                {verified.slice(0,20).map(ua=>(
+                  <tr key={ua.id}>
+                    <td style={S.td}>{getUserName(ua.userId)}</td>
+                    <td style={S.td}>{getActionName(ua.actionId)}</td>
+                    <td style={S.td}>{fmtTime(ua.verifiedAt)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+/* âââ Cashouts Tab âââ */
+function CashoutsTab({ cashouts, users, reload }) {
+  const getUserName = id => { const u = users.find(u=>u.id===id); return u ? u.firstName : 'Unknown'; };
+  const getUserPayment = id => { const u = users.find(u=>u.id===id); return u ? { cashapp: u.cashappUsername, venmo: u.venmoUsername } : {}; };
+
+  const markSent = async (c) => {
+    await sb.from('cashout_requests').update({ status:'sent', processedAt: new Date().toISOString() }).eq('id', c.id);
+    reload();
+  };
+  const markComplete = async (c) => {
+    await sb.from('cashout_requests').update({ status:'completed', processedAt: new Date().toISOString() }).eq('id', c.id);
+    reload();
+  };
+
+  const pending = cashouts.filter(c=>c.status==='pending');
+  const sent = cashouts.filter(c=>c.status==='sent');
+  const completed = cashouts.filter(c=>c.status==='completed');
+
+  return (
+    <div style={S.container}>
+      <h2 style={{marginBottom:20}}>Cashout Requests ({pending.length} pending)</h2>
+      {pending.length===0 && sent.length===0 ? (
+        <div style={{...S.card,textAlign:'center',padding:40,color:'#888'}}>No pending cashout requests</div>
+      ) : (
+        <div style={S.card}>
+          <table style={S.table}>
+            <thead><tr><th style={S.th}>User</th><th style={S.th}>Points</th><th style={S.th}>Amount</th><th style={S.th}>Method</th><th style={S.th}>Payment Info</th><th style={S.th}>Code</th><th style={S.th}>Status</th><th style={S.th}>Requested</th><th style={S.th}>Actions</th></tr></thead>
+            <tbody>
+              {[...pending,...sent].map(c=>{
+                const pay = getUserPayment(c.userId);
+                return (
+                  <tr key={c.id}>
+                    <td style={S.td}>{getUserName(c.userId)}</td>
+                    <td style={S.td}>{c.pointsRequested?.toLocaleString()}</td>
+                    <td style={{...S.td,fontWeight:600,color:'#4ade80'}}>${Number(c.cashAmount).toFixed(2)}</td>
+                    <td style={S.td}><span style={S.badge(c.paymentMethod==='cashapp'?'#00d632':'#008cff')}>{c.paymentMethod}</span></td>
+                    <td style={S.td}><span style={{fontSize:12,color:'#fbbf24'}}>{c.paymentMethod==='cashapp'?pay.cashapp:pay.venmo||'â'}</span></td>
+                    <td style={S.td}><code style={{fontSize:11}}>{c.code}</code></td>
+                    <td style={S.td}><span style={S.badge(c.status==='pending'?'#fbbf24':'#60a5fa')}>{c.status}</span></td>
+                    <td style={S.td}>{fmtTime(c.createdAt)}</td>
+                    <td style={S.td}>
+                      <div style={{display:'flex',gap:6}}>
+                        {c.status==='pending' && <button style={{...S.btnSm,background:'#60a5fa',color:'#000'}} onClick={()=>markSent(c)}>Mark Sent</button>}
+                        {c.status==='sent' && <button style={{...S.btnSm,background:'#4ade80',color:'#000'}} onClick={()=>markComplete(c)}>Complete</button>}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {completed.length>0 && (
+        <>
+          <h3 style={{margin:'24px 0 12px'}}>Completed ({completed.length})</h3>
+          <div style={S.card}>
+            <table style={S.table}>
+              <thead><tr><th style={S.th}>User</th><th style={S.th}>Amount</th><th style={S.th}>Method</th><th style={S.th}>Completed</th></tr></thead>
+              <tbody>
+                {completed.slice(0,20).map(c=>(
+                  <tr key={c.id}>
+                    <td style={S.td}>{getUserName(c.userId)}</td>
+                    <td style={S.td}>${Number(c.cashAmount).toFixed(2)}</td>
+                    <td style={S.td}>{c.paymentMethod}</td>
+                    <td style={S.td}>{fmtTime(c.processedAt)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+/* âââ Community Pot Tab âââ */
+function PotTab({ pot, reload }) {
+  const [form, setForm] = useState({});
+  const [editing, setEditing] = useState(false);
+
+  useEffect(() => {
+    if (pot) setForm({ total_raised: pot.total_raised||0, cashout_pot: pot.cashout_pot||0, current_cashout_balance: pot.current_cashout_balance||0, operations_reserve: pot.operations_reserve||0, bridgework_fund: pot.bridgework_fund||0 });
+  }, [pot]);
+
+  const save = async () => {
+    await sb.from('westaackr_pot').update({
+      total_raised: Number(form.total_raised),
+      cashout_pot: Number(form.cashout_pot),
+      current_cashout_balance: Number(form.current_cashout_balance),
+      operations_reserve: Number(form.operations_reserve),
+      bridgework_fund: Number(form.bridgework_fund),
+      last_updated: new Date().toISOString()
+    }).eq('pot_id', pot.pot_id);
+    setEditing(false);
+    reload();
+  };
+
+  if (!pot) return <div style={S.container}><div style={{...S.card,textAlign:'center',padding:40,color:'#888'}}>No community pot data found</div></div>;
+
+  return (
+    <div style={S.container}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
+        <h2>Community Pot</h2>
+        {!editing && <button style={{...S.btnSm,background:'#333',color:'#e0e0e0',padding:'8px 20px',fontSize:14}} onClick={()=>setEditing(true)}>Edit</button>}
+      </div>
+      <div style={S.card}>
+        {editing ? (
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+            {Object.entries(form).map(([key,val])=>(
+              <div key={key}>
+                <label style={{fontSize:12,color:'#888',display:'block',marginBottom:4}}>{key.replace(/_/g,' ').replace(/\b\w/g,l=>l.toUpperCase())}</label>
+                <input style={S.input} type="number" step="0.01" value={val} onChange={e=>setForm({...form,[key]:e.target.value})}/>
+              </div>
+            ))}
+            <div style={{gridColumn:'1/-1',display:'flex',gap:12}}>
+              <button style={{...S.btn,background:'#4ade80',color:'#000',width:'auto',padding:'10px 30px'}} onClick={save}>Save</button>
+              <button style={{...S.btn,background:'#333',color:'#e0e0e0',width:'auto',padding:'10px 30px'}} onClick={()=>setEditing(false)}>Cancel</button>
+            </div>
+          </div>
+        ) : (
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:24}}>
+            <div style={{textAlign:'center',padding:20}}><div style={{fontSize:32,fontWeight:700,color:'#4ade80'}}>${Number(pot.total_raised||0).toFixed(2)}</div><div style={{color:'#888',fontSize:13,marginTop:4}}>Total Raised</div></div>
+            <div style={{textAlign:'center',padding:20}}><div style={{fontSize:32,fontWeight:700}}>${Number(pot.cashout_pot||0).toFixed(2)}</div><div style={{color:'#888',fontSize:13,marginTop:4}}>Cashout Pot</div></div>
+            <div style={{textAlign:'center',padding:20}}><div style={{fontSize:32,fontWeight:700,color:'#fbbf24'}}>${Number(pot.current_cashout_balance||0).toFixed(2)}</div><div style={{color:'#888',fontSize:13,marginTop:4}}>Current Cashout Balance</div></div>
+            <div style={{textAlign:'center',padding:20}}><div style={{fontSize:32,fontWeight:700}}>${Number(pot.operations_reserve||0).toFixed(2)}</div><div style={{color:'#888',fontSize:13,marginTop:4}}>Operations Reserve</div></div>
+            <div style={{textAlign:'center',padding:20}}><div style={{fontSize:32,fontWeight:700}}>${Number(pot.bridgework_fund||0).toFixed(2)}</div><div style={{color:'#888',fontSize:13,marginTop:4}}>BridgeWork Fund</div></div>
+          </div>
+        )}
+        <div style={{color:'#555',fontSize:11,marginTop:16,textAlign:'right'}}>Last updated: {fmtTime(pot.last_updated)}</div>
+      </div>
+    </div>
+  );
+}
+
+/* âââ Main App âââ */
+function App() {
+  const [authed, setAuthed] = useState(false);
+  const [tab, setTab] = useState('overview');
+  const [users, setUsers] = useState([]);
+  const [actions, setActions] = useState([]);
+  const [userActions, setUserActions] = useState([]);
+  const [cashouts, setCashouts] = useState([]);
+  const [pot, setPot] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    const [u, a, ua, c, p] = await Promise.all([
+      sb.from('users').select('*').order('createdAt',{ascending:false}),
+      sb.from('actions').select('*').order('priority',{ascending:true}),
+      sb.from('user_actions').select('*').order('createdAt',{ascending:false}),
+      sb.from('cashout_requests').select('*').order('createdAt',{ascending:false}),
+      sb.from('westaackr_pot').select('*').limit(1),
+    ]);
+    setUsers(u.data||[]);
+    setActions(a.data||[]);
+    setUserActions(ua.data||[]);
+    setCashouts(c.data||[]);
+    setPot(p.data?.[0]||null);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    if (authed) loadData();
+  }, [authed, loadData]);
+
+  // Check existing session
+  useEffect(() => {
+    sb.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user?.email === ADMIN_EMAIL) setAuthed(true);
+    });
+  }, []);
+
+  if (!authed) return <LoginPage onLogin={() => setAuthed(true)} />;
+
+  const tabs = ['overview','users','actions','verifications','cashouts','pot'];
+  const tabLabels = { overview:'Overview',users:'Users',actions:'Actions',verifications:'Verifications',cashouts:'Cashouts',pot:'Community Pot' };
+
+  return (
+    <div style={S.page}>
+      <div style={S.header}>
+        <div style={{display:'flex',alignItems:'center',gap:12}}>
+          <span style={{fontSize:20,fontWeight:700,color:'#4ade80'}}>OSAAT</span>
+          <span style={{color:'#888',fontSize:13}}>Admin Dashboard</span>
+        </div>
+        <button style={{...S.btnSm,background:'#333',color:'#888'}} onClick={async()=>{await sb.auth.signOut();setAuthed(false)}}>Sign Out</button>
+      </div>
+      <div style={S.nav}>
+        {tabs.map(t=><button key={t} style={S.navBtn(tab===t)} onClick={()=>setTab(t)}>{tabLabels[t]}</button>)}
+      </div>
+      {loading ? (
+        <div style={{textAlign:'center',padding:60,color:'#888'}}>Loading data...</div>
+      ) : (
+        <>
+          {tab==='overview' && <OverviewTab users={users} actions={actions} userActions={userActions} cashouts={cashouts} pot={pot}/>}
+          {tab==='users' && <UsersTab users={users} reload={loadData}/>}
+          {tab==='actions' && <ActionsTab actions={actions} reload={loadData}/>}
+          {tab==='verifications' && <VerificationsTab userActions={userActions} users={users} actions={actions} reload={loadData}/>}
+          {tab==='cashouts' && <CashoutsTab cashouts={cashouts} users={users} reload={loadData}/>}
+          {tab==='pot' && <PotTab pot={pot} reload={loadData}/>}
+        </>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
