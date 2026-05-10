@@ -6,7 +6,7 @@
 <title>OSAAT Admin Dashboard</title>
 <script src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone@7.23.6/babel.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -27,11 +27,11 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CATEGORIES = ['foundation','health_stability','employment_prep','employment_outcome','community_contribution','network_growth'];
 const VERIFICATION_TYPES = ['tap_to_complete','proof_upload','document_upload','email_forward','partner_portal','stripe_identity','stripe_identity_ssn_covered','mutual_app_confirmation','document_upload_comparison','certificate_upload','in_person_confirmation','referee_confirmation','org_confirmation','partner_portal_drug_test','employer_email_or_paystub'];
 
-const fmt = d => d ? new Date(d).toLocaleDateString() : 'â';
-const fmtTime = d => d ? new Date(d).toLocaleString() : 'â';
+const fmt = d => d ? new Date(d).toLocaleDateString() : 'Ã¢ÂÂ';
+const fmtTime = d => d ? new Date(d).toLocaleString() : 'Ã¢ÂÂ';
 const catLabel = c => c ? c.replace(/_/g,' ').replace(/\b\w/g,l=>l.toUpperCase()) : '';
 
-/* âââ Styles âââ */
+/* Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Styles Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ */
 const S = {
   page: { minHeight:'100vh', background:'linear-gradient(135deg,#0a0a0f 0%,#1a1a2e 100%)' },
   login: { display:'flex',alignItems:'center',justifyContent:'center',minHeight:'100vh',background:'linear-gradient(135deg,#0a0a0f 0%,#1a1a2e 100%)' },
@@ -57,7 +57,7 @@ const S = {
   header: { background:'#16162a',padding:'16px 24px',borderBottom:'1px solid #222',display:'flex',justifyContent:'space-between',alignItems:'center' },
 };
 
-/* âââ Login âââ */
+/* Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Login Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ */
 function LoginPage({ onLogin }) {
   const [pw, setPw] = useState('');
   const [err, setErr] = useState('');
@@ -81,7 +81,7 @@ function LoginPage({ onLogin }) {
   );
 }
 
-/* âââ Overview Tab âââ */
+/* Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Overview Tab Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ */
 function OverviewTab({ users, actions, userActions, cashouts, pot }) {
   const pending = userActions.filter(a=>a.status==='pending').length;
   const pendingCash = cashouts.filter(c=>c.status==='pending').length;
@@ -118,7 +118,7 @@ function OverviewTab({ users, actions, userActions, cashouts, pot }) {
               {users.slice(0,10).map(u=>(
                 <tr key={u.id}>
                   <td style={S.td}>{u.firstName}{u.nickname?` (${u.nickname})`:''}</td>
-                  <td style={S.td}>{u.email||u.phone||'â'}</td>
+                  <td style={S.td}>{u.email||u.phone||'Ã¢ÂÂ'}</td>
                   <td style={S.td}>{u.points}</td>
                   <td style={S.td}><span style={S.badge('#4ade80')}>Tier {u.tier}</span></td>
                   <td style={S.td}>{fmt(u.createdAt)}</td>
@@ -132,7 +132,7 @@ function OverviewTab({ users, actions, userActions, cashouts, pot }) {
   );
 }
 
-/* âââ Users Tab âââ */
+/* Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Users Tab Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ */
 function UsersTab({ users, reload }) {
   const [search, setSearch] = useState('');
   const filtered = users.filter(u => {
@@ -156,10 +156,10 @@ function UsersTab({ users, reload }) {
             {filtered.map(u=>(
               <tr key={u.id}>
                 <td style={S.td}><strong>{u.firstName}</strong>{u.nickname?<span style={{color:'#888'}}> ({u.nickname})</span>:''}</td>
-                <td style={S.td}><div>{u.email||'â'}</div><div style={{color:'#888',fontSize:11}}>{u.phone||''}</div></td>
+                <td style={S.td}><div>{u.email||'Ã¢ÂÂ'}</div><div style={{color:'#888',fontSize:11}}>{u.phone||''}</div></td>
                 <td style={S.td}>{u.points.toLocaleString()}</td>
                 <td style={S.td}><span style={S.badge('#4ade80')}>Tier {u.tier}</span></td>
-                <td style={S.td}><code style={{fontSize:11,color:'#888'}}>{u.cashoutCode||'â'}</code></td>
+                <td style={S.td}><code style={{fontSize:11,color:'#888'}}>{u.cashoutCode||'Ã¢ÂÂ'}</code></td>
                 <td style={S.td}>{u.isSuspended?<span style={S.badge('#f87171')}>Suspended</span>:<span style={S.badge('#4ade80')}>Active</span>}</td>
                 <td style={S.td}>{fmt(u.createdAt)}</td>
                 <td style={S.td}>
@@ -177,7 +177,7 @@ function UsersTab({ users, reload }) {
   );
 }
 
-/* âââ Actions Tab âââ */
+/* Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Actions Tab Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ */
 function ActionsTab({ actions, reload }) {
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -309,7 +309,7 @@ function ActionsTab({ actions, reload }) {
   );
 }
 
-/* âââ Verifications Tab âââ */
+/* Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Verifications Tab Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ */
 function VerificationsTab({ userActions, users, actions, reload }) {
   const pending = userActions.filter(a=>a.status==='pending'||a.status==='completed');
   const verified = userActions.filter(a=>a.status==='verified');
@@ -340,7 +340,7 @@ function VerificationsTab({ userActions, users, actions, reload }) {
                   <td style={S.td}>{getUserName(ua.userId)}</td>
                   <td style={S.td}>{getActionName(ua.actionId)}</td>
                   <td style={S.td}><span style={S.badge(ua.status==='pending'?'#fbbf24':'#60a5fa')}>{ua.status}</span></td>
-                  <td style={S.td}>{ua.proofUrl ? <a href={ua.proofUrl} target="_blank" style={{color:'#60a5fa',fontSize:12}}>View Proof</a> : 'â'}</td>
+                  <td style={S.td}>{ua.proofUrl ? <a href={ua.proofUrl} target="_blank" style={{color:'#60a5fa',fontSize:12}}>View Proof</a> : 'Ã¢ÂÂ'}</td>
                   <td style={S.td}>{fmtTime(ua.completedAt||ua.createdAt)}</td>
                   <td style={S.td}>
                     <div style={{display:'flex',gap:6}}>
@@ -378,7 +378,7 @@ function VerificationsTab({ userActions, users, actions, reload }) {
   );
 }
 
-/* âââ Cashouts Tab âââ */
+/* Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Cashouts Tab Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ */
 function CashoutsTab({ cashouts, users, reload }) {
   const getUserName = id => { const u = users.find(u=>u.id===id); return u ? u.firstName : 'Unknown'; };
   const getUserPayment = id => { const u = users.find(u=>u.id===id); return u ? { cashapp: u.cashappUsername, venmo: u.venmoUsername } : {}; };
@@ -414,7 +414,7 @@ function CashoutsTab({ cashouts, users, reload }) {
                     <td style={S.td}>{c.pointsRequested?.toLocaleString()}</td>
                     <td style={{...S.td,fontWeight:600,color:'#4ade80'}}>${Number(c.cashAmount).toFixed(2)}</td>
                     <td style={S.td}><span style={S.badge(c.paymentMethod==='cashapp'?'#00d632':'#008cff')}>{c.paymentMethod}</span></td>
-                    <td style={S.td}><span style={{fontSize:12,color:'#fbbf24'}}>{c.paymentMethod==='cashapp'?pay.cashapp:pay.venmo||'â'}</span></td>
+                    <td style={S.td}><span style={{fontSize:12,color:'#fbbf24'}}>{c.paymentMethod==='cashapp'?pay.cashapp:pay.venmo||'Ã¢ÂÂ'}</span></td>
                     <td style={S.td}><code style={{fontSize:11}}>{c.code}</code></td>
                     <td style={S.td}><span style={S.badge(c.status==='pending'?'#fbbf24':'#60a5fa')}>{c.status}</span></td>
                     <td style={S.td}>{fmtTime(c.createdAt)}</td>
@@ -456,7 +456,7 @@ function CashoutsTab({ cashouts, users, reload }) {
   );
 }
 
-/* âââ Community Pot Tab âââ */
+/* Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Community Pot Tab Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ */
 function PotTab({ pot, reload }) {
   const [form, setForm] = useState({});
   const [editing, setEditing] = useState(false);
@@ -515,7 +515,7 @@ function PotTab({ pot, reload }) {
   );
 }
 
-/* âââ Main App âââ */
+/* Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Main App Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ */
 function App() {
   const [authed, setAuthed] = useState(false);
   const [tab, setTab] = useState('overview');
