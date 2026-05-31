@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
+import { trackLocation } from '../lib/tracking'
 
 interface AuthContextType {
   session: Session | null
@@ -24,15 +25,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(session)
       if (session) {
         loadUserProfile(session.user.id)
+        trackLocation(session.user.id)
       }
       setLoading(false)
     })
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session)
       if (session) {
         loadUserProfile(session.user.id)
+        if (event === 'SIGNED_IN') {
+          trackLocation(session.user.id)
+        }
       } else {
         setUser(null)
       }
@@ -45,7 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   async function loadUserProfile(userId: string) {
     try {
       const { data, error } = await supabase
-        .from('users')
+        .from('osaat_users')
         .select('*')
         .eq('id', userId)
         .single()
@@ -68,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!authUser) throw new Error('No user returned from signup')
 
       // Create user profile
-      const { error: profileError } = await supabase.from('users').insert([
+      const { error: profileError } = await supabase.from('osaat_users').insert([
         {
           id: authUser.id,
           email,

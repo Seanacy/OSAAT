@@ -27,7 +27,7 @@ export default function AdminPartners() {
     setLoading(true)
     try {
       const { data, error } = await supabase
-        .from('users')
+        .from('osaat_users')
         .select('*')
         .eq('role', 'partner')
         .order('firstName')
@@ -53,7 +53,7 @@ export default function AdminPartners() {
       if (signUpError) throw signUpError
 
       // Create partner user record
-      const { error: insertError } = await supabase.from('users').insert([
+      const { error: insertError } = await supabase.from('osaat_users').insert([
         {
           id: authData.user?.id,
           email: formData.email,
@@ -80,7 +80,7 @@ export default function AdminPartners() {
     if (!confirm('Remove this partner?')) return
     try {
       const { error } = await supabase
-        .from('users')
+        .from('osaat_users')
         .delete()
         .eq('id', partnerId)
 

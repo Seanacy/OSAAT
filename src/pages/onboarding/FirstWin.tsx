@@ -27,14 +27,14 @@ export default function FirstWinPage() {
       // Add points to user
       const newPoints = points + 100
       const { error: updateError } = await supabase
-        .from('users')
+        .from('osaat_users')
         .update({ points: newPoints })
         .eq('id', session.user.id)
 
       if (updateError) throw updateError
 
       // Record the action completion
-      const { error: actionError } = await supabase.from('user_actions').insert([
+      const { error: actionError } = await supabase.from('osaat_user_actions').insert([
         {
           userId: session.user.id,
           actionId: 'weekly-checkin',

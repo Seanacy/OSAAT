@@ -25,7 +25,7 @@ export default function PartnerLogin() {
 
       // Check if user is partner
       const { data: partnerData, error: partnerError } = await supabase
-        .from('users')
+        .from('osaat_users')
         .select('role')
         .eq('id', data.user.id)
         .single()

@@ -26,15 +26,15 @@ export default function AdminDashboard() {
 
   const loadStats = async () => {
     try {
-      const { data: users } = await supabase.from('users').select('id')
+      const { data: users } = await supabase.from('osaat_users').select('id')
       const { data: activeUsers } = await supabase
-        .from('users')
+        .from('osaat_users')
         .select('id')
         .gte('lastLoginAt', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
 
-      const { data: cashouts } = await supabase.from('cashout_requests').select('id')
+      const { data: cashouts } = await supabase.from('osaat_cashout_requests').select('id')
       const { data: pending } = await supabase
-        .from('user_actions')
+        .from('osaat_user_actions')
         .select('id')
         .eq('status', 'pending')
 

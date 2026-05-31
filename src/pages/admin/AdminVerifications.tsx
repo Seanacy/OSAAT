@@ -10,6 +10,12 @@ interface Verification {
   completedAt: string
   proofUrl?: string
   notes?: string
+  fromExtras?: boolean
+}
+
+// Extra$$$ pays 75% of the original points, rounded to the nearest 50.
+function extraPoints(p: number): number {
+  return Math.round((p * 0.75) / 50) * 50
 }
 
 export default function AdminVerifications() {
@@ -25,7 +31,7 @@ export default function AdminVerifications() {
     setLoading(true)
     try {
       const { data, error } = await supabase
-        .from('user_actions')
+        .from('osaat_user_actions')
         .select('*')
         .eq('status', filter === 'pending' ? 'pending' : 'verified')
         .order('completedAt', { ascending: false })
@@ -39,33 +45,39 @@ export default function AdminVerifications() {
     }
   }
 
-  const handleApprove = async (verificationId: string, userId: string, actionId: string) => {
+  const handleApprove = async (
+    verificationId: string,
+    userId: string,
+    actionId: string,
+    fromExtras: boolean
+  ) => {
     try {
       // Get the action to get point value
       const { data: action } = await supabase
-        .from('actions')
+        .from('osaat_actions')
         .select('pointValue')
         .eq('id', actionId)
         .single()
 
       // Update verification status
       await supabase
-        .from('user_actions')
+        .from('osaat_user_actions')
         .update({ status: 'verified' })
         .eq('id', verificationId)
 
-      // Add points to user
+      // Add points to user (75% if completed from Extra$$$)
       if (action) {
         const { data: user } = await supabase
-          .from('users')
+          .from('osaat_users')
           .select('points')
           .eq('id', userId)
           .single()
 
         if (user) {
+          const earned = fromExtras ? extraPoints(action.pointValue) : action.pointValue
           await supabase
-            .from('users')
-            .update({ points: (user.points || 0) + action.pointValue })
+            .from('osaat_users')
+            .update({ points: (user.points || 0) + earned })
             .eq('id', userId)
         }
       }
@@ -79,7 +91,7 @@ export default function AdminVerifications() {
   const handleReject = async (verificationId: string) => {
     try {
       await supabase
-        .from('user_actions')
+        .from('osaat_user_actions')
         .delete()
         .eq('id', verificationId)
 
@@ -125,6 +137,11 @@ export default function AdminVerifications() {
                   <p className="text-xs text-gray-500 mt-2">
                     {new Date(v.completedAt).toLocaleString()}
                   </p>
+                  {v.fromExtras && (
+                    <span className="inline-block mt-2 px-2 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wide text-green-700 bg-green-50 border border-green-200">
+                      Extra$$$ · awards 75%
+                    </span>
+                  )}
                 </div>
                 <span
                   className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
@@ -147,7 +164,7 @@ export default function AdminVerifications() {
               {v.status === 'pending' && (
                 <div className="flex gap-2">
                   <button
-                    onClick={() => handleApprove(v.id, v.userId, v.actionId)}
+                    onClick={() => handleApprove(v.id, v.userId, v.actionId, !!v.fromExtras)}
                     className="flex-1 flex items-center justify-center gap-2 bg-green-50 hover:bg-green-100 text-green-700 font-semibold py-2 rounded transition"
                   >
                     <CheckCircle2 size={18} />

@@ -36,33 +36,33 @@ export default function AdminAnalytics() {
 
       // New signups in range
       const { data: signups } = await supabase
-        .from('users')
+        .from('osaat_users')
         .select('createdAt')
         .gte('createdAt', since)
 
       // Actions completed in range
       const { data: actions } = await supabase
-        .from('user_actions')
+        .from('osaat_user_actions')
         .select('completedAt, actionId, status')
         .gte('completedAt', since)
         .eq('status', 'completed')
 
       // ID verifications (stripe_identity actions)
       const { data: verifications } = await supabase
-        .from('user_actions')
+        .from('osaat_user_actions')
         .select('completedAt, actionId, status')
         .gte('completedAt', since)
         .in('actionId', ['get-state-id', 'get-birth-certificate', 'get-social-security'])
 
       // Cashout requests in range
       const { data: cashouts } = await supabase
-        .from('cashout_requests')
+        .from('osaat_cashout_requests')
         .select('createdAt, pointsRequested, status')
         .gte('createdAt', since)
 
       // Total points across all users
       const { data: allUsers } = await supabase
-        .from('users')
+        .from('osaat_users')
         .select('points')
 
       const totalPointsAwarded = allUsers?.reduce((sum, u) => sum + (u.points || 0), 0) || 0

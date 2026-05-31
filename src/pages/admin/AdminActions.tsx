@@ -36,7 +36,7 @@ export default function AdminActions() {
     setLoading(true)
     try {
       const { data, error } = await supabase
-        .from('actions')
+        .from('osaat_actions')
         .select('*')
         .order('category')
 
@@ -52,7 +52,7 @@ export default function AdminActions() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      const { error } = await supabase.from('actions').insert([
+      const { error } = await supabase.from('osaat_actions').insert([
         {
           ...formData,
           id: `action-${Date.now()}`,
@@ -80,7 +80,7 @@ export default function AdminActions() {
   const handleToggle = async (actionId: string, isEnabled: boolean) => {
     try {
       const { error } = await supabase
-        .from('actions')
+        .from('osaat_actions')
         .update({ isEnabled: !isEnabled })
         .eq('id', actionId)
 
@@ -94,7 +94,7 @@ export default function AdminActions() {
   const handleDelete = async (actionId: string) => {
     if (!confirm('Delete this action?')) return
     try {
-      const { error } = await supabase.from('actions').delete().eq('id', actionId)
+      const { error } = await supabase.from('osaat_actions').delete().eq('id', actionId)
       if (error) throw error
       loadActions()
     } catch (error) {

@@ -27,7 +27,7 @@ export default function PartnerDashboard() {
     setLoading(true)
     try {
       const { data, error } = await supabase
-        .from('user_actions')
+        .from('osaat_user_actions')
         .select('*')
         .eq('status', 'pending')
         .order('completedAt', { ascending: false })
@@ -45,28 +45,28 @@ export default function PartnerDashboard() {
     try {
       // Get action points
       const { data: action } = await supabase
-        .from('actions')
+        .from('osaat_actions')
         .select('pointValue')
         .eq('id', actionId)
         .single()
 
       // Update status
       await supabase
-        .from('user_actions')
+        .from('osaat_user_actions')
         .update({ status: 'completed' })
         .eq('id', verificationId)
 
       // Add points
       if (action) {
         const { data: user } = await supabase
-          .from('users')
+          .from('osaat_users')
           .select('points')
           .eq('id', userId)
           .single()
 
         if (user) {
           await supabase
-            .from('users')
+            .from('osaat_users')
             .update({ points: (user.points || 0) + action.pointValue })
             .eq('id', userId)
         }
@@ -83,7 +83,7 @@ export default function PartnerDashboard() {
     if (!message.trim()) return
 
     try {
-      await supabase.from('partner_messages').insert([
+      await supabase.from('osaat_partner_messages').insert([
         {
           message: message.trim(),
           createdAt: new Date().toISOString(),

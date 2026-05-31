@@ -34,7 +34,7 @@ export default function PointSharingPage() {
 
     try {
       const { data, error: searchError } = await supabase
-        .from('users')
+        .from('osaat_users')
         .select('id, firstName, points')
         .ilike('firstName', `%${query}%`)
         .neq('id', session?.user.id)
@@ -81,7 +81,7 @@ export default function PointSharingPage() {
       }
 
       // Create sharing transaction
-      const { error: insertError } = await supabase.from('point_shares').insert([
+      const { error: insertError } = await supabase.from('osaat_point_shares').insert([
         {
           fromUserId: session?.user.id,
           toUserId: selectedUser.id,
@@ -94,13 +94,13 @@ export default function PointSharingPage() {
 
       // Update sender's points
       await supabase
-        .from('users')
+        .from('osaat_users')
         .update({ points: (user?.points || 0) - points })
         .eq('id', session?.user.id)
 
       // Update recipient's points
       await supabase
-        .from('users')
+        .from('osaat_users')
         .update({ points: selectedUser.points + points })
         .eq('id', selectedUser.id)
 

@@ -28,13 +28,13 @@ export default function ProfilePage() {
     if (!user?.id) return
     try {
       const { data: pending } = await supabase
-        .from('user_actions')
+        .from('osaat_user_actions')
         .select('id')
         .eq('userId', user.id)
         .eq('status', 'pending')
 
       const { data: completed } = await supabase
-        .from('user_actions')
+        .from('osaat_user_actions')
         .select('id')
         .eq('userId', user.id)
         .eq('status', 'completed')

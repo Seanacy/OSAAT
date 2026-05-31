@@ -26,7 +26,7 @@ export default function AdminCashout() {
     setLoading(true)
     try {
       const { data, error } = await supabase
-        .from('cashout_requests')
+        .from('osaat_cashout_requests')
         .select('*')
         .eq('status', filter)
         .order('createdAt', { ascending: false })
@@ -43,7 +43,7 @@ export default function AdminCashout() {
   const handleMarkSent = async (requestId: string) => {
     try {
       const { error } = await supabase
-        .from('cashout_requests')
+        .from('osaat_cashout_requests')
         .update({ status: 'sent' })
         .eq('id', requestId)
 
@@ -57,7 +57,7 @@ export default function AdminCashout() {
   const handleMarkCompleted = async (requestId: string) => {
     try {
       const { error } = await supabase
-        .from('cashout_requests')
+        .from('osaat_cashout_requests')
         .update({ status: 'completed' })
         .eq('id', requestId)
 

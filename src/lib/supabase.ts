@@ -35,6 +35,10 @@ export type Action = {
   isEnabled: boolean
   createdAt: string
   priority: number
+  choiceGroupId: string | null
+  choiceGroupMinRequired: number | null
+  sideNote: string | null
+  mandatory: boolean
 }
 
 export type UserAction = {

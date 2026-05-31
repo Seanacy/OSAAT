@@ -34,7 +34,7 @@ export default function CashoutPage() {
   const loadPot = async () => {
     try {
       const { data } = await supabase
-        .from('westaackr_pot')
+        .from('osaat_westaackr_pot')
         .select('current_cashout_balance')
         .limit(1)
         .single()
@@ -48,7 +48,7 @@ export default function CashoutPage() {
     if (!session?.user.id) return
     try {
       const { data, error: fetchError } = await supabase
-        .from('cashout_requests')
+        .from('osaat_cashout_requests')
         .select('*')
         .eq('userId', session.user.id)
         .order('createdAt', { ascending: false })
@@ -95,7 +95,7 @@ export default function CashoutPage() {
 
       const cashAmount = points / 100
 
-      const { error: insertError } = await supabase.from('cashout_requests').insert([
+      const { error: insertError } = await supabase.from('osaat_cashout_requests').insert([
         {
           userId: session?.user.id,
           points,

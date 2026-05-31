@@ -37,7 +37,7 @@ export default function NotificationPreferencesPage() {
     if (!user?.id) return
     try {
       const { data } = await supabase
-        .from('users')
+        .from('osaat_users')
         .select('notificationPrefs')
         .eq('id', user.id)
         .single()
@@ -56,7 +56,7 @@ export default function NotificationPreferencesPage() {
     setSaving(true)
     try {
       await supabase
-        .from('users')
+        .from('osaat_users')
         .update({ notificationPrefs: prefs })
         .eq('id', session.user.id)
 

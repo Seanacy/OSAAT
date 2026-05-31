@@ -24,7 +24,7 @@ export default function AdminUsers() {
   const loadUsers = async () => {
     setLoading(true)
     try {
-      let query = supabase.from('users').select('*')
+      let query = supabase.from('osaat_users').select('*')
 
       if (filter === 'suspended') {
         query = query.eq('isSuspended', true)
@@ -45,7 +45,7 @@ export default function AdminUsers() {
   const handleSuspend = async (userId: string, isSuspended: boolean) => {
     try {
       const { error } = await supabase
-        .from('users')
+        .from('osaat_users')
         .update({ isSuspended: !isSuspended })
         .eq('id', userId)
 
@@ -59,7 +59,7 @@ export default function AdminUsers() {
   const handleResetCode = async (userId: string) => {
     try {
       const { error } = await supabase
-        .from('users')
+        .from('osaat_users')
         .update({ cashoutCode: '' })
         .eq('id', userId)
 
@@ -73,7 +73,7 @@ export default function AdminUsers() {
   const handleMakePartner = async (userId: string) => {
     try {
       const { error } = await supabase
-        .from('users')
+        .from('osaat_users')
         .update({ role: 'partner' })
         .eq('id', userId)
 

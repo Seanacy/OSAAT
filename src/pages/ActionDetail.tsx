@@ -1,11 +1,16 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { ChevronLeft, AlertCircle, Upload, Zap, ShieldCheck } from 'lucide-react'
 import { loadStripe } from '@stripe/stripe-js'
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '')
+
+// Extra$$$ pays 75% of the original points, rounded to the nearest 50.
+function extraPoints(p: number): number {
+  return Math.round((p * 0.75) / 50) * 50
+}
 
 interface Action {
   id: string
@@ -22,6 +27,8 @@ interface Action {
 export default function ActionDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const fromExtras = searchParams.get('from') === 'extras'
   const { user, session } = useAuth()
   const [action, setAction] = useState<Action | null>(null)
   const [loading, setLoading] = useState(true)
@@ -39,7 +46,7 @@ export default function ActionDetailPage() {
     if (!id) return
     try {
       const { data, error: fetchError } = await supabase
-        .from('actions')
+        .from('osaat_actions')
         .select('*')
         .eq('id', id)
         .single()
@@ -79,12 +86,13 @@ export default function ActionDetailPage() {
       }
 
       // Verification submitted — create a pending user action
-      const { error: insertError } = await supabase.from('user_actions').insert([
+      const { error: insertError } = await supabase.from('osaat_user_actions').insert([
         {
           userId: session.user.id,
           actionId: action.id,
           status: 'pending',
           notes: `stripe_session:${data.sessionId}`,
+          fromExtras,
         },
       ])
 
@@ -125,7 +133,7 @@ export default function ActionDetailPage() {
       }
 
       // Create user action record
-      const { error: insertError } = await supabase.from('user_actions').insert([
+      const { error: insertError } = await supabase.from('osaat_user_actions').insert([
         {
           userId: session.user.id,
           actionId: action.id,
@@ -133,16 +141,18 @@ export default function ActionDetailPage() {
           completedAt: action.verificationType === 'tap_to_complete' ? new Date().toISOString() : null,
           proofUrl,
           notes: emailContent || null,
+          fromExtras,
         },
       ])
 
       if (insertError) throw insertError
 
-      // If tap to complete, add points
+      // If tap to complete, add points (75% if from Extra$$$)
       if (action.verificationType === 'tap_to_complete') {
-        const newPoints = (user?.points || 0) + action.pointValue
+        const earned = fromExtras ? extraPoints(action.pointValue) : action.pointValue
+        const newPoints = (user?.points || 0) + earned
         await supabase
-          .from('users')
+          .from('osaat_users')
           .update({ points: newPoints })
           .eq('id', session.user.id)
       }
@@ -207,15 +217,22 @@ export default function ActionDetailPage() {
     )
   }
 
+  const displayPoints = fromExtras ? extraPoints(action.pointValue) : action.pointValue
+
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
       <div className="bg-gradient-to-br from-accent-500 to-accent-600 text-white p-6 pb-8">
-        <Link to="/actions" className="flex items-center gap-2 mb-6 text-accent-100 hover:text-white">
+        <Link to={fromExtras ? '/actions?tab=extras' : '/actions'} className="flex items-center gap-2 mb-6 text-accent-100 hover:text-white">
           <ChevronLeft size={20} />
           Back
         </Link>
         <h1 className="text-3xl font-bold">{action.name}</h1>
         <p className="text-accent-100 mt-2">Category: {action.category}</p>
+        {fromExtras && (
+          <div className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-green-50 bg-green-700 border border-green-400 rounded-full px-2 py-0.5 mt-2">
+            Extra$$$ · 75%
+          </div>
+        )}
       </div>
 
       <div className="p-4">
@@ -226,9 +243,16 @@ export default function ActionDetailPage() {
             <div>
               <div className="text-3xl font-bold text-primary-600 flex items-center gap-1">
                 <Zap size={28} />
-                {action.pointValue}
+                {displayPoints}
+                {fromExtras && (
+                  <span className="text-base text-gray-400 font-normal line-through ml-2">
+                    {action.pointValue}
+                  </span>
+                )}
               </div>
-              <p className="text-sm text-gray-600 mt-1">points</p>
+              <p className="text-sm text-gray-600 mt-1">
+                points{fromExtras && ' (Extra$$$ catch-up)'}
+              </p>
             </div>
             {action.cashValue > 0 && (
               <div>
@@ -344,7 +368,7 @@ export default function ActionDetailPage() {
                   : 'Submitting...'
                 : (action.verificationType === 'stripe_identity' || action.verificationType === 'stripe_identity_ssn_covered')
                   ? 'Verify My Identity'
-                  : `Complete & Earn ${action.pointValue} Points`}
+                  : `Complete & Earn ${displayPoints} Points`}
             </button>
           </>
         ) : (
@@ -356,7 +380,7 @@ export default function ActionDetailPage() {
             </div>
             <p className="text-green-800 text-sm mb-4">
               {action.verificationType === 'tap_to_complete'
-                ? `You earned ${action.pointValue} points!`
+                ? `You earned ${displayPoints} points!`
                 : 'Your submission is pending verification.'}
             </p>
             <p className="text-xs text-green-700">Redirecting...</p>

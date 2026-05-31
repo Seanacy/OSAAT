@@ -34,22 +34,38 @@ export default function DashboardPage() {
 
       // Load all user's completed action IDs (to skip in recommendation)
       const { data: allCompleted } = await supabase
-        .from('user_actions')
+        .from('osaat_user_actions')
         .select('actionId')
         .eq('userId', user.id)
         .eq('status', 'completed')
 
       const completedIds = new Set((allCompleted || []).map((a: any) => a.actionId))
 
-      // Load next recommended action: highest priority (lowest number) the user has unlocked, not completed
+      // Load next recommended action: highest priority (lowest number) the user has unlocked, not completed.
+      // Also skip any action whose "pick 1" choice group has already been satisfied by a sibling.
       const { data: actions } = await supabase
-        .from('actions')
+        .from('osaat_actions')
         .select('*')
         .eq('isEnabled', true)
         .lte('minTierRequired', currentTier)
         .order('priority', { ascending: true })
 
-      const nextUp = (actions || []).find((a: any) => !completedIds.has(a.id))
+      // Count completions per choice group so we know when a pick-1 group is done
+      const groupCompletedCount: Record<string, number> = {}
+      for (const a of (actions || []) as any[]) {
+        if (a.choiceGroupId && completedIds.has(a.id)) {
+          groupCompletedCount[a.choiceGroupId] = (groupCompletedCount[a.choiceGroupId] || 0) + 1
+        }
+      }
+
+      const nextUp = (actions || []).find((a: any) => {
+        if (completedIds.has(a.id)) return false
+        if (a.choiceGroupId && a.choiceGroupMinRequired != null) {
+          const done = groupCompletedCount[a.choiceGroupId] || 0
+          if (done >= a.choiceGroupMinRequired) return false
+        }
+        return true
+      })
       if (nextUp) {
         setNextAction(nextUp)
       } else {
@@ -58,7 +74,7 @@ export default function DashboardPage() {
 
       // Load recent completions
       const { data: completed } = await supabase
-        .from('user_actions')
+        .from('osaat_user_actions')
         .select('*')
         .eq('userId', user.id)
         .eq('status', 'completed')
@@ -69,7 +85,7 @@ export default function DashboardPage() {
 
       // Load pot available cashout balance
       const { data: potData } = await supabase
-        .from('westaackr_pot')
+        .from('osaat_westaackr_pot')
         .select('current_cashout_balance')
         .limit(1)
         .single()
@@ -247,7 +263,7 @@ export default function DashboardPage() {
             <h3 className="font-bold text-gray-900">Support OSAAT</h3>
           </div>
           <p className="text-sm text-gray-700 mb-4">
-            Your donation helps fund cashout rewards and keeps this program running for the community.
+            Know someone who believes in second chances? Share this link and ask them to help keep OSAAT running. Every donation goes directly toward funding cashout rewards for people putting in the work.
           </p>
           <a
             href="https://buy.stripe.com/6oU8wI0Y1cbS9defed73G00"
@@ -256,7 +272,7 @@ export default function DashboardPage() {
             className="block text-center py-2 px-4 rounded-lg font-semibold bg-rose-500 text-white hover:bg-rose-600 transition"
           >
             <Heart className="inline mr-2" size={16} />
-            Make a Donation
+            Share Donation Link
           </a>
         </div>
       </div>

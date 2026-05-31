@@ -52,7 +52,7 @@ export default function PotDisplay() {
 
         // Sync back to OSAAT's local pot table so Cashout page stays accurate
         await supabase
-          .from('westaackr_pot')
+          .from('osaat_westaackr_pot')
           .update({
             total_raised: totalRaised,
             operations_reserve: operationsReserve,

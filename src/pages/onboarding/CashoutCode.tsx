@@ -29,7 +29,7 @@ export default function CashoutCodePage() {
 
       // Update user with cashout code
       const { error: updateError } = await supabase
-        .from('users')
+        .from('osaat_users')
         .update({ cashoutCode: code.trim() })
         .eq('id', session.user.id)
 
