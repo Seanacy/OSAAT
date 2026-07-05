@@ -8,6 +8,7 @@ interface AuthContextType {
   loading: boolean
   signUp: (email: string, password: string, firstName: string) => Promise<void>
   signIn: (email: string, password: string) => Promise<void>
+  signInWithGoogle: () => Promise<void>
   signOut: () => Promise<void>
   user: any
 }
@@ -55,10 +56,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('id', userId)
         .single()
 
-      if (error) throw error
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // No profile row yet (e.g. first-time Google sign-in) — create one.
+          await createProfileForGoogleUser(userId)
+          return
+        }
+        throw error
+      }
       setUser(data)
     } catch (error) {
       console.error('Error loading user profile:', error)
+    }
+  }
+
+  async function createProfileForGoogleUser(userId: string) {
+    try {
+      const { data: { user: authUser } } = await supabase.auth.getUser()
+      const meta: any = authUser?.user_metadata || {}
+      const firstName = meta.given_name || meta.full_name || meta.name || authUser?.email?.split('@')[0] || 'Friend'
+
+      const { data, error } = await supabase
+        .from('osaat_users')
+        .insert([
+          {
+            id: userId,
+            email: authUser?.email,
+            firstName,
+            points: 0,
+            tier: 1,
+            cashoutCode: '',
+            isSuspended: false,
+          },
+        ])
+        .select()
+        .single()
+
+      if (error) throw error
+      setUser(data)
+    } catch (error) {
+      console.error('Error creating profile for Google user:', error)
     }
   }
 
@@ -106,6 +143,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  async function signInWithGoogle() {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: window.location.origin },
+      })
+
+      if (error) throw error
+    } catch (error) {
+      console.error('Google sign in error:', error)
+      throw error
+    }
+  }
+
   async function signOut() {
     try {
       const { error } = await supabase.auth.signOut()
@@ -117,7 +168,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ session, loading, signUp, signIn, signOut, user }}>
+    <AuthContext.Provider value={{ session, loading, signUp, signIn, signInWithGoogle, signOut, user }}>
       {children}
     </AuthContext.Provider>
   )
