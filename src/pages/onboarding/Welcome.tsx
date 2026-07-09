@@ -222,6 +222,13 @@ export default function WelcomePage() {
             <span className="font-bold text-gray-800 group-hover:text-accent-600 transition-colors text-sm">BridgeWork</span>
           </a>
         </div>
+        {/* Founding Sponsors */}
+              <div className="pt-4 border-t border-gray-100">
+                      <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">Founding Sponsors</p>
+                      <div className="flex items-center justify-center gap-6">
+                                <a href="https://www.manywaysup.com/founding-sponsors.html" target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-gray-600 hover:text-primary-600">Become our first Founding Sponsor →</a>
+                      </div>
+              </div>
         <p className="text-xs text-gray-400">
           Built with purpose. Powered by community.
         </p>
